@@ -1,0 +1,67 @@
+Metadata-Version: 2.1
+Name: sdap
+Version: 0.1
+Summary: Demo of usage of object storage for SDAP
+Home-page: UNKNOWN
+Author: SDAP
+Author-email: thomas.g.loubrieu@jpl.nasa.gov
+License: apache-2.0
+Keywords: sdap,cog,s3
+Platform: UNKNOWN
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+
+SDAP experiment with object storage
+
+## Prerequisites
+
+Set minio server
+
+Standalone minio:
+
+Server install:
+
+    brew install minio/stable/minio
+
+Start the server
+
+    export MINIO_ROOT_USER=myminio
+    export MINIO_ROOT_PASSWORD=minio123AB
+
+    minio server /Users/loubrieu/Documents/sdap/minio --address localhost:9000 --console-address localhost:19000
+
+Client
+
+    brew install minio/stable/mc
+    mc --help
+
+Create server alias:
+
+    mc alias set minio http://localhost:9000 myminio minio123AB
+
+Create a bucket:
+
+    mc mb hls
+
+
+## Copy test datasets
+
+Create a bucket:
+
+    mc mb hls
+
+
+Copy some files:
+
+    mc cp data/hls/s1_output_latlon_HLS_S30_T18TYN_2019263_cog.tif minio/hls
+    mc cp data/hls/s1_output_latlon_HLS_S30_T18TYN_2019260_cog.tif minio/hls
+    mc cp data/hls/s1_output_latlon_HLS_S30_T18TYN_2019253_cog.tif minio/hls
+
+
+

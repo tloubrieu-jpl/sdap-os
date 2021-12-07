@@ -1,0 +1,17 @@
+README.md
+setup.cfg
+setup.py
+src/sdap/__init__.py
+src/sdap/data_access/S3Driver.py
+src/sdap/data_access/__init__.py
+src/sdap/data_access/index/__init__.py
+src/sdap/data_access/index/spatial/MGRS.py
+src/sdap/data_access/index/spatial/__init__.py
+src/sdap/data_access/index/temporal/__init__.py
+src/sdap/data_access/index/temporal/daily.py
+src/sdap_os.egg-info/PKG-INFO
+src/sdap_os.egg-info/SOURCES.txt
+src/sdap_os.egg-info/dependency_links.txt
+src/sdap_os.egg-info/not-zip-safe
+src/sdap_os.egg-info/requires.txt
+src/sdap_os.egg-info/top_level.txt

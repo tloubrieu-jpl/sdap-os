@@ -1,0 +1,7 @@
+boto3==1.20.20
+mgrs==1.4.2
+rasterio==1.2.10
+pyproj==3.3.0
+numpy==1.21.4
+
+[dev]
