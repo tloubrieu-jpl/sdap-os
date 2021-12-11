@@ -49,6 +49,11 @@ Copy some files:
 
 Set AWS credentials in environment (see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 
+    export AWS_ACCESS_KEY_ID={your key id}
+    export AWS_SECRET_ACCESS_KEY={your secret}
+    export AWS_DEFAULT_REGION={your region}
+
+
 Install and run tests:
 
     pip install -e '.[dev]'
