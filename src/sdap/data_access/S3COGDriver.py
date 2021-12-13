@@ -1,5 +1,4 @@
 import sys
-from functools import partial
 import logging
 import itertools
 import boto3
@@ -8,12 +7,11 @@ import xarray
 import ray
 import rasterio as rio
 from rasterio.session import AWSSession
-from rasterio.windows import Window
 from rasterio.errors import RasterioIOError
 
 from pyproj import Transformer, CRS
 
-from sdap.data_access.index.spatial import MGRS
+from sdap.data_access.index.spatial import Sentinel2Grid
 from sdap.data_access.index.temporal import Daily
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -26,7 +24,7 @@ class S3COGDriver:
                  region='us-west-2',
                  bucket='aqacf-nexus-stage',
                  key_pattern='hls_cog/s1_output_latlon_HLS_S30_{spatial_key}_{temporal_key}_cog.tif',
-                 spatial_index=MGRS(level=5),
+                 spatial_index=Sentinel2Grid(),
                  temporal_index=Daily(format="%Y%j")):
 
         self.session = boto3.Session()
@@ -56,11 +54,12 @@ class S3COGDriver:
                     mask_y = (rds.y >= y_range[0]) & (rds.y <= y_range[1])
                     cropped_ds = rds.where(mask_x & mask_y, drop=True)
                     transposed_ds = cropped_ds.transpose("x", "y", "band")
+
                     time_ds = transposed_ds.expand_dims(
                         {'time': [self.temporal_index.get_datetime(temporal_key)]},
                         axis=0
                     )
-                    time_ds.name = 'tile'
+                    time_ds.name = 'var'
             return time_ds
 
         except RasterioIOError:
@@ -87,7 +86,7 @@ class S3COGDriver:
 
         ray.init(_node_ip_address='192.168.1.89', ignore_reinit_error=True)
 
-        @ray.remote
+        #@ray.remote
         def remote_partial(args_dict):
             return self.get_from_key(
                 **args_dict,
@@ -95,14 +94,12 @@ class S3COGDriver:
                 y_range=y_range,
             )
 
-        results = ray.get([remote_partial.remote({'spatial_key': s_key, 'temporal_key': t_key})
-                           for s_key, t_key in self.get_keys(lon_range, lat_range, t_range)])
+        #results = ray.get([remote_partial.remote({'spatial_key': s_key, 'temporal_key': t_key})
+        #                   for s_key, t_key in self.get_keys(lon_range, lat_range, t_range)])
 
-        #results = []
-        #for s_key, t_key in self.get_keys(lon_range, lat_range, t_range):
-        #    results.append(remote_partial({'spatial_key': s_key, 'temporal_key': t_key}))
-
-
+        results = []
+        for s_key, t_key in self.get_keys(lon_range, lat_range, t_range):
+            results.append(remote_partial({'spatial_key': s_key, 'temporal_key': t_key}))
 
         return xarray.merge([r for r in results if not r is None])
 
