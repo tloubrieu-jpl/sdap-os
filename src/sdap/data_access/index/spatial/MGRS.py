@@ -1,10 +1,9 @@
 import mgrs
 import utm
-from pyproj import Proj, Transformer, CRS
 import numpy as np
 import math
 import string
-from pygeodesy.mgrs import Mgrs
+
 
 class MGRS:
 
