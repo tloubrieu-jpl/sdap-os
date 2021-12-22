@@ -43,8 +43,8 @@ class EVITestCase(unittest.TestCase):
 
     def test_consolidate(self):
         evi = EVI([1, 2, 3], [4, 5, 6])
-        output1 = evi.tile_calc(self.input1)
-        output2 = evi.tile_calc(self.input2)
+        output1 = evi.tile_calc(self.input1['var'])
+        output2 = evi.tile_calc(self.input2['var'])
 
         evi.consolidate([output1, output2])
 
@@ -53,20 +53,20 @@ class EVITestCase(unittest.TestCase):
 
         evi = EVI([1, 2, 3], [4, 5, 6])
 
-        output = evi.tile_calc(self.input1)
+        output = evi.tile_calc(self.input1['var'])
 
         expected_result = [
             [
-                [0.41304348, 0.4],
-                [0.390625, 0.38356164]
+                [0.45454545, 0.37931034],
+                [0.36170213, 0.35384615]
             ],
             [
-                [0.37804878, 0.37362637],
-                [0.37, 0.36697248]
+                [0.34939759, 0.34653465],
+                [0.34453782, 0.34306569]
             ]
         ]
 
-        assert np.isclose(output['var'].data, np.asarray(expected_result)).all()
+        assert np.isclose(output.data, np.asarray(expected_result)).all()
 
 
 if __name__ == '__main__':
