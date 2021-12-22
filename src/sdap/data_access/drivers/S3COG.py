@@ -28,6 +28,38 @@ logging.getLogger('rasterio').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('fiona').setLevel(logging.WARNING)
 
+#TODO have abstract objects for spatial_index and temporal_index, instead of Daily used here
+def get_from_key(key: Key, x_range, y_range, operator,
+                 bucket: str, session: boto3.Session, temporal_index: Daily):
+    path = f's3://{bucket}/{key.get_str()}'
+
+    try:
+        with rio.Env(AWSSession(session)):
+            logger.debug("fetching %s", path)
+            with rio.open(path) as f:
+                rds = rioxarray.open_rasterio(f)
+                mask_x = (rds.x >= x_range[0]) & (rds.x <= x_range[1])
+                mask_y = (rds.y >= y_range[0]) & (rds.y <= y_range[1])
+                cropped_ds = rds.where(mask_x & mask_y, drop=True)
+                cropped_ds.data[cropped_ds.data == cropped_ds._FillValue] = np.nan
+                if np.isnan(cropped_ds.data).all():
+                    logger.debug("no valid data in subset for key %s, ignore", key)
+                    return None
+                else:
+                    time_ds = cropped_ds.expand_dims(
+                        {'time': [temporal_index.get_datetime(key.temporal_key)]},
+                        axis=0
+                    )
+                    time_ds.name = 'var'
+                    return operator.tile_calc(time_ds)
+
+    except RasterioIOError:
+        logger.debug("object not found from key %s, ignore", key)
+        return None
+    except OperatorProcessingException:
+        logger.debug("operator fail on key %s, ignore", key)
+        return None
+
 
 class S3COG:
 
@@ -82,40 +114,6 @@ class S3COG:
         except botocore.exceptions.ClientError as e:
             return False
 
-    #TODO have abstract objects for spatial_index and temporal_index, instead of Daily used here
-    @staticmethod
-    def get_from_key(key: Key, x_range, y_range, operator,
-                     bucket: str, session: boto3.Session, temporal_index: Daily):
-
-        path = f's3://{bucket}/{key.get_str()}'
-
-        try:
-            with rio.Env(AWSSession(session)):
-                logger.debug("fetching %s", path)
-                with rio.open(path) as f:
-                    rds = rioxarray.open_rasterio(f)
-                    mask_x = (rds.x >= x_range[0]) & (rds.x <= x_range[1])
-                    mask_y = (rds.y >= y_range[0]) & (rds.y <= y_range[1])
-                    cropped_ds = rds.where(mask_x & mask_y, drop=True)
-                    cropped_ds.data[cropped_ds.data == cropped_ds._FillValue] = np.nan
-                    if np.isnan(cropped_ds.data).all():
-                        logger.debug("no valid data in subset for key %s, ignore", key)
-                        return None
-                    else:
-                        time_ds = cropped_ds.expand_dims(
-                            {'time': [temporal_index.get_datetime(key.temporal_key)]},
-                            axis=0
-                        )
-                        time_ds.name = 'var'
-                        return operator.tile_calc(time_ds)
-
-        except RasterioIOError:
-            logger.debug("object not found from key %s, ignore", key)
-            return None
-        except OperatorProcessingException:
-            logger.debug("operator fail on key %s, ignore", key)
-            return None
-
     def get_all(self, lon_range, lat_range, t_range, operator):
         xas = xarray.DataArray()
         xas.name = 'var'
@@ -137,7 +135,7 @@ class S3COG:
             # we use a static method otherwise the full S3COG instance is passed to ray worker
             # the spatial_index especially is too big since it contains the tile polygons
             # that we don't need here
-            return S3COG.get_from_key(
+            return get_from_key(
                 key,
                 x_range=x_range,
                 y_range=y_range,
