@@ -82,12 +82,15 @@ class S3COG:
         except botocore.exceptions.ClientError as e:
             return False
 
-    def get_from_key(self, key: Key, x_range, y_range, operator):
+    #TODO have abstract objects for spatial_index and temporal_index, instead of Daily used here
+    @staticmethod
+    def get_from_key(key: Key, x_range, y_range, operator,
+                     bucket: str, session: boto3.Session, temporal_index: Daily):
 
-        path = f's3://{self.bucket}/{key.get_str()}'
+        path = f's3://{bucket}/{key.get_str()}'
 
         try:
-            with rio.Env(AWSSession(self.session)):
+            with rio.Env(AWSSession(session)):
                 logger.debug("fetching %s", path)
                 with rio.open(path) as f:
                     rds = rioxarray.open_rasterio(f)
@@ -100,7 +103,7 @@ class S3COG:
                         return None
                     else:
                         time_ds = cropped_ds.expand_dims(
-                            {'time': [self.temporal_index.get_datetime(key.temporal_key)]},
+                            {'time': [temporal_index.get_datetime(key.temporal_key)]},
                             axis=0
                         )
                         time_ds.name = 'var'
@@ -131,11 +134,18 @@ class S3COG:
 
         @ray.remote(max_retries=0)
         def remote_partial(key: Key):
-            return self.get_from_key(
+            # we use a static method otherwise the full S3COG instance is passed to ray worker
+            # the spatial_index especially is too big since it contains the tile polygons
+            # that we don't need here
+            return S3COG.get_from_key(
                 key,
                 x_range=x_range,
                 y_range=y_range,
-                operator=operator
+                operator=operator,
+                bucket=self.bucket,
+                session=self.session,
+                temporal_index=self.temporal_index
+
             )
 
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
