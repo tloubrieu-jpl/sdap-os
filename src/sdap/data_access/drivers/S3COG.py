@@ -29,6 +29,7 @@ logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('fiona').setLevel(logging.WARNING)
 
 #TODO have abstract objects for spatial_index and temporal_index, instead of Daily used here
+@ray.remote(max_retries=0)
 def get_from_key(key: Key, x_range, y_range, operator,
                  bucket: str, session: boto3.Session, temporal_index: Daily):
     path = f's3://{bucket}/{key.get_str()}'
@@ -130,30 +131,21 @@ class S3COG:
         x_range = sorted([coord_lower_left[0], coord_upper_right[0]])
         y_range = sorted([coord_lower_left[1], coord_upper_right[1]])
 
-        @ray.remote(max_retries=0)
-        def remote_partial(key: Key):
-            # we use a static method otherwise the full S3COG instance is passed to ray worker
-            # the spatial_index especially is too big since it contains the tile polygons
-            # that we don't need here
-            return get_from_key(
-                key,
-                x_range=x_range,
-                y_range=y_range,
-                operator=operator,
-                bucket=self.bucket,
-                session=self.session,
-                temporal_index=self.temporal_index
-
-            )
-
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
         ray.init(ignore_reinit_error=True)
 
         futures = {}
-        #results = []
         for key in self.get_keys(lon_range, lat_range, t_range):
-            #results.append(remote_partial(key))
-            futures[key.get_str()] = remote_partial.remote(key)
+            args = {
+                'key': key,
+                'x_range': x_range,
+                'y_range': y_range,
+                'operator': operator,
+                'bucket': self.bucket,
+                'session': self.session,
+                'temporal_index': self.temporal_index
+            }
+            futures[key.get_str()] = get_from_key.remote(**args)
 
         while futures:
             done_keys = set()
