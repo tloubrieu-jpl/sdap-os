@@ -1,5 +1,14 @@
 import xarray
 import numpy as np
+import logging
+import sys
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+class OperatorProcessingException(Exception):
+    pass
 
 
 class EVI:
@@ -34,14 +43,20 @@ class EVI:
 
             return coeff[-1] + linear_sum
 
-        def evi(bands, axis=None):
-            #TODO sort bands values per axis
+        def evi(bands):
             numerator = linear(self.numerator_coeff, bands)
             if self.demominator_coeff:
                 return numerator / linear(self.demominator_coeff, bands)
             else:
                 return numerator
 
+        def evi_loop(bands, axis=None):
+            return np.apply_along_axis(evi, axis[0], bands)
 
-        return input.reduce(evi, dim = ['time', 'x', 'y'])
+        if len(input.band) + 1 == len(self.numerator_coeff) \
+            and (self.demominator_coeff is None \
+                 or len(input.band) + 1 == len(self.demominator_coeff)):
+            return input.reduce(evi_loop, dim=['band'])
+        else:
+            raise OperatorProcessingException()
 

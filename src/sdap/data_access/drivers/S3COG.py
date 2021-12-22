@@ -16,22 +16,17 @@ from pyproj import Transformer, CRS
 
 from sdap.data_access.index.spatial import Sentinel2Grid
 from sdap.data_access.index.temporal import Daily
+from sdap.operators import OperatorProcessingException
+from .Key import Key
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-class Key:
-    def __init__(self, pattern, s_key, t_key):
-        self.pattern = pattern
-        self.spatial_key = s_key
-        self.temporal_key = t_key
-
-    def get_str(self):
-        return self.pattern.format(
-            spatial_key=self.spatial_key,
-            temporal_key=self.temporal_key
-        )
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('rasterio').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('fiona').setLevel(logging.WARNING)
 
 
 class S3COG:
@@ -71,7 +66,7 @@ class S3COG:
         for key_args in itertools.product(self.key_pattern ,spatial_sub_keys, temporal_sub_keys):
             tested += 1
             key = Key(*key_args)
-            logger.info("Test if key %s exists", key.get_str())
+            logger.debug("Test if key %s exists", key.get_str())
             if self.key_exists(key, s3_session):
                 found += 1
                 yield key
@@ -93,7 +88,7 @@ class S3COG:
 
         try:
             with rio.Env(AWSSession(self.session)):
-                logger.info("try to fetch %s", path)
+                logger.debug("fetching %s", path)
                 with rio.open(path) as f:
                     rds = rioxarray.open_rasterio(f)
                     mask_x = (rds.x >= x_range[0]) & (rds.x <= x_range[1])
@@ -114,6 +109,9 @@ class S3COG:
         except RasterioIOError:
             logger.debug("object not found from key %s, ignore", key)
             return None
+        except OperatorProcessingException:
+            logger.debug("operator fail on key %s, ignore", key)
+            return None
 
     def get_all(self, lon_range, lat_range, t_range, operator):
         xas = xarray.DataArray()
@@ -131,7 +129,7 @@ class S3COG:
         x_range = sorted([coord_lower_left[0], coord_upper_right[0]])
         y_range = sorted([coord_lower_left[1], coord_upper_right[1]])
 
-        #@ray.remote(max_retries=0)
+        @ray.remote(max_retries=0)
         def remote_partial(key: Key):
             return self.get_from_key(
                 key,
@@ -144,16 +142,17 @@ class S3COG:
         ray.init(ignore_reinit_error=True)
 
         futures = {}
+        #results = []
         for key in self.get_keys(lon_range, lat_range, t_range):
-            remote_partial(key)
-            #futures[key.get_str()] = remote_partial.remote(key)
+            #results.append(remote_partial(key))
+            futures[key.get_str()] = remote_partial.remote(key)
 
         while futures:
             done_keys = set()
             for key_str, future in futures.items():
                 if future.future().done():
                     result = future.future().result()
-                    if result:
+                    if result is not None:
                         yield result
                     done_keys.add(key_str)
             [futures.pop(key_str) for key_str in done_keys]
