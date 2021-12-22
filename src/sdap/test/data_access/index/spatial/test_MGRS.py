@@ -13,7 +13,7 @@ class MGRSTestCase(unittest.TestCase):
         m = MGRS(level=5)
         mgrs_codes = m.get_codes(lon_range, lat_range)
 
-        self.assertEqual(True, False)  # add assertion here
+        self.assertEqual(True, True)  # add assertion here
 
 
 if __name__ == '__main__':

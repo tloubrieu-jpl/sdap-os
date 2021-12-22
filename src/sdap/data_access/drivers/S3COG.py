@@ -158,7 +158,7 @@ class S3COG:
             [futures.pop(key_str) for key_str in done_keys]
             time.sleep(2)
 
-        ray.shutdown()
+        #ray.shutdown()
 
         #results = []
         #for s_key, t_key in self.get_keys(lon_range, lat_range, t_range):
