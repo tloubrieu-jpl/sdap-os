@@ -7,7 +7,7 @@ from sdap.operators import SpatialMean, EVI
 import matplotlib.pyplot as plt
 import time
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +21,7 @@ class S3COGTestCase(unittest.TestCase):
         time_range = ['2017-05-20T00:00:00.000000+00:00', '2017-06-20T00:00:00.000000+00:00']
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, SpatialMean())
-        print("small mean request took %f s",  time.time() - start)
+        print(f"small mean request took {time.time() - start} s")
 
         self.plot(xas)
 
@@ -42,7 +42,7 @@ class S3COGTestCase(unittest.TestCase):
 
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, SpatialMean())
-        print("bigger mean request took %f s", time.time() - start)
+        print(f"bigger mean request took {time.time() - start} s")
 
         plt.plot(xas.time, xas['var'].data[0,0,:,:])
         plt.show()
@@ -59,7 +59,7 @@ class S3COGTestCase(unittest.TestCase):
 
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, evi)
-        print("evi request took %f s", time.time() - start)
+        print(f"evi request took {time.time() - start} s")
 
         self.plot_evi(xas)
 
