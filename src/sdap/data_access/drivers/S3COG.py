@@ -35,6 +35,7 @@ def get_from_key(key: Key, x_range, y_range, operator,
     path = f's3://{bucket}/{key.get_str()}'
 
     try:
+        result = None
         with rio.Env(AWSSession(session)):
             logger.debug("fetching %s", path)
             with rio.open(path) as f:
@@ -43,16 +44,16 @@ def get_from_key(key: Key, x_range, y_range, operator,
                 mask_y = (rds.y >= y_range[0]) & (rds.y <= y_range[1])
                 cropped_ds = rds.where(mask_x & mask_y, drop=True)
                 cropped_ds.data[cropped_ds.data == cropped_ds._FillValue] = np.nan
-                if np.isnan(cropped_ds.data).all():
-                    logger.debug("no valid data in subset for key %s, ignore", key)
-                    return None
-                else:
+                if not np.isnan(cropped_ds.data).all():
                     time_ds = cropped_ds.expand_dims(
                         {'time': [temporal_index.get_datetime(key.temporal_key)]},
                         axis=0
                     )
                     time_ds.name = 'var'
-                    return operator.tile_calc(time_ds)
+                    result = operator.tile_calc(time_ds)
+                else:
+                    logger.debug("no valid data in subset for key %s, ignore", key)
+        return result
 
     except RasterioIOError:
         logger.debug("object not found from key %s, ignore", key)
@@ -104,7 +105,6 @@ class S3COG:
                 found += 1
                 yield key
         logger.info("%i keys tested, %i keys found", tested, found)
-        s3_session.close()
 
     def key_exists(self, key: Key, s3_session):
         try:
