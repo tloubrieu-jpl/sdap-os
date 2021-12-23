@@ -28,7 +28,7 @@ class EVI:
         combined_inputs = inputs[0]
         for i in range(len(inputs))[1:]:
             combined_inputs = combined_inputs.combine_first(inputs[i])
-
+            del inputs[i]
         return combined_inputs
 
     def tile_calc(self, input: xarray.DataArray):
