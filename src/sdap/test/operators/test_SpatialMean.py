@@ -50,8 +50,8 @@ class SpatialMeanTestCase(unittest.TestCase):
 
     def test_consolidate(self):
         spatial_mean = SpatialMean()
-        mean1 = spatial_mean.tile_calc(self.input1)
-        mean2 = spatial_mean.tile_calc(self.input2)
+        mean1 = spatial_mean.tile_calc(self.input1['var'])
+        mean2 = spatial_mean.tile_calc(self.input2['var'])
 
         consolidated_mean = spatial_mean.consolidate([mean1, mean2])
 

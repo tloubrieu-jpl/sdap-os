@@ -104,6 +104,7 @@ class S3COG:
                 found += 1
                 yield key
         logger.info("%i keys tested, %i keys found", tested, found)
+        s3_session.close()
 
     def key_exists(self, key: Key, s3_session):
         try:

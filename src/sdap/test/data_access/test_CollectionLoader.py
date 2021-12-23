@@ -1,6 +1,7 @@
 import unittest
 import os
 from sdap.data_access import CollectionLoader
+from sdap.operators import SpatialMean
 
 
 class CollectionLoaderTestCase(unittest.TestCase):
@@ -16,7 +17,7 @@ class CollectionLoaderTestCase(unittest.TestCase):
         lon_range = [-72.572, -71.183]
         time_range = ['2017-05-20T00:00:00.000000+00:00', '2017-06-20T00:00:00.000000+00:00']
 
-        collection_loader.get_driver('hls').get(lon_range, lat_range, time_range)
+        collection_loader.get_driver('hls').get(lon_range, lat_range, time_range, operator=SpatialMean())
 
 
 if __name__ == '__main__':
