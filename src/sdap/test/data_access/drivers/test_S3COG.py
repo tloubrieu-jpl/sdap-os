@@ -69,9 +69,8 @@ class S3COGTestCase(unittest.TestCase):
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, evi)
         print(f"performance: evi request took {time.time() - start} s")
 
-        del xas
         self.plot_evi(xas)
-
+        del xas
 
 if __name__ == '__main__':
     unittest.main()
