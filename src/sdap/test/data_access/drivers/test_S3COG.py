@@ -51,7 +51,7 @@ class S3COGTestCase(unittest.TestCase):
 
         plt.plot(xas.time, xas['var'].data[0,0,:,:])
         del xas
-        plt.savefig('big_mean.png')
+        plt.savefig('/tmp/big_mean.png')
 
         #plt.show()
 
