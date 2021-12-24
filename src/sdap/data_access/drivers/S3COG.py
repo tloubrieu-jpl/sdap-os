@@ -42,15 +42,16 @@ def get_from_key(key: Key, x_range, y_range, operator,
                 rds = rioxarray.open_rasterio(f)
                 mask_x = (rds.x >= x_range[0]) & (rds.x <= x_range[1])
                 mask_y = (rds.y >= y_range[0]) & (rds.y <= y_range[1])
-                cropped_ds = rds.where(mask_x & mask_y, drop=True)
-                cropped_ds.data[cropped_ds.data == cropped_ds._FillValue] = np.nan
-                if not np.isnan(cropped_ds.data).all():
-                    time_ds = cropped_ds.expand_dims(
+                rds = rds.where(mask_x & mask_y, drop=True)
+                rds.data[rds.data == rds._FillValue] = np.nan
+                if not np.isnan(rds.data).all():
+                    rds = rds.expand_dims(
                         {'time': [temporal_index.get_datetime(key.temporal_key)]},
                         axis=0
                     )
-                    time_ds.name = 'var'
-                    result = operator.tile_calc(time_ds)
+                    rds.name = 'var'
+                    result = operator.tile_calc(rds)
+                    del rds
                 else:
                     logger.debug("no valid data in subset for key %s, ignore", key)
         return result
