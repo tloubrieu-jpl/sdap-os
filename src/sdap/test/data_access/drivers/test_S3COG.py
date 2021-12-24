@@ -25,6 +25,7 @@ class S3COGTestCase(unittest.TestCase):
 
         plt.plot(xas.time, xas['var'].data[0, 0, :, :])
         plt.savefig('/tmp/small_mean.png')
+        del xas
         #plt.show()
 
     #TODO enable plot as a callback of the get all function, to be able to update a plot while data is fetched
@@ -49,6 +50,7 @@ class S3COGTestCase(unittest.TestCase):
 
         plt.plot(xas.time, xas['var'].data[0,0,:,:])
         plt.savefig('big_mean.png')
+        del xas
         #plt.show()
 
     def test_bigger_get_evi(self):
@@ -66,6 +68,7 @@ class S3COGTestCase(unittest.TestCase):
         print(f"performance: evi request took {time.time() - start} s")
 
         self.plot_evi(xas)
+        del xas
 
 
 if __name__ == '__main__':

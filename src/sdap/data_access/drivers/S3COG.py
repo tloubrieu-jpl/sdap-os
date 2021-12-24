@@ -133,7 +133,8 @@ class S3COG:
         y_range = sorted([coord_lower_left[1], coord_upper_right[1]])
 
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
-        ray.init(ignore_reinit_error=True)
+        ray.init(include_dashboard=True,
+                 ignore_reinit_error=True)
 
         futures = {}
         for key in self.get_keys(lon_range, lat_range, t_range):
@@ -159,7 +160,7 @@ class S3COG:
             [futures.pop(key_str) for key_str in done_keys]
             time.sleep(2)
 
-        #ray.shutdown()
+        ray.shutdown()
 
         #results = []
         #for s_key, t_key in self.get_keys(lon_range, lat_range, t_range):
