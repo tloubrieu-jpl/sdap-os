@@ -10,7 +10,6 @@ class SpatialMean:
         combined_inputs = inputs[0]
         for i in range(len(inputs))[1:]:
             combined_inputs = combined_inputs.combine_first(inputs[i])
-            del inputs[i]
 
         # consolidate mean
         weights = combined_inputs['weight'].fillna(0)

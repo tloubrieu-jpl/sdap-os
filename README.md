@@ -57,7 +57,20 @@ Set AWS credentials in environment (see https://docs.aws.amazon.com/cli/latest/u
 Install and run tests:
 
     pip install -e '.[dev]'
-    python setup.py test
+    python setup.py test &> out.log &
+
+# Resource allocation
+
+The resources needed to run the application can be estimated as follow:
+
+- maximum size of 1 tile for each worker = T = 64 * x * y * t * obs dim, for example 64*3660*3660*1*6 = 5Gb
+- maximum size of the user result returned to the user = R = 64*x*y*t*obs dims
+- number of paralels workers: n
+
+
+Total RAM = T*n + R
+
+Number of CPU = n
 
 
 

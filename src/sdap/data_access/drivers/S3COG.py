@@ -122,6 +122,7 @@ class S3COG:
         xas.name = 'var'
         for xa in self.get(lon_range, lat_range, t_range, operator):
             xas = operator.consolidate([xas, xa])
+            del xa
         return xas
 
     def get(self, lon_range, lat_range, t_range, operator):
