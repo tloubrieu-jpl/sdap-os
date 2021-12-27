@@ -22,7 +22,7 @@ class S3COGTestCase(unittest.TestCase):
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, SpatialMean())
         print(f"performance: small mean request took {time.time() - start} s")
-
+        plt.figure()
         plt.plot(xas.time, xas['var'].data[0, 0, :, :])
         del xas
         plt.savefig('/tmp/small_mean.png')
@@ -31,6 +31,7 @@ class S3COGTestCase(unittest.TestCase):
 
     #TODO enable plot as a callback of the get all function, to be able to update a plot while data is fetched
     def plot_evi(self, results: xarray.DataArray):
+        plt.figure()
         for x in results.x:
             for y in results.y:
                 ts = results.sel({'x': x.values.item(), 'y': y.values.item()})
@@ -49,6 +50,7 @@ class S3COGTestCase(unittest.TestCase):
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, SpatialMean())
         print(f"performance: bigger mean request took {time.time() - start} s")
 
+        plt.figure()
         plt.plot(xas.time, xas['var'].data[0,0,:,:])
         del xas
         plt.savefig('/tmp/big_mean.png')
