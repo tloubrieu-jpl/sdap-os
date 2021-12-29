@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # if we want a serverless application, we should do otherwise
 class CollectionLoader:
 
-    PRIMITIVE_TYPES = (int, float, str)
+    PRIMITIVE_TYPES = (int, float, str, list)
 
     def __init__(self, conf_file):
         self.conf_file = conf_file
@@ -22,8 +22,6 @@ class CollectionLoader:
             self.collections = {}
             for key, desc in self.conf['collections'].items():
                 self.collections[key] = self.desc_to_instances(desc)
-
-
 
     def get_driver(self, collection):
         return self.collections[collection]

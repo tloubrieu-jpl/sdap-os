@@ -1,9 +1,6 @@
 README.md
 setup.cfg
 setup.py
-data/hls/s1_output_latlon_HLS_S30_T18TYN_2019253_cog.tif
-data/hls/s1_output_latlon_HLS_S30_T18TYN_2019260_cog.tif
-data/hls/s1_output_latlon_HLS_S30_T18TYN_2019263_cog.tif
 src/__init__.py
 src/sdap/VERSION.txt
 src/sdap/__init__.py
@@ -11,6 +8,7 @@ src/sdap/main.py
 src/sdap.egg-info/PKG-INFO
 src/sdap.egg-info/SOURCES.txt
 src/sdap.egg-info/dependency_links.txt
+src/sdap.egg-info/entry_points.txt
 src/sdap.egg-info/not-zip-safe
 src/sdap.egg-info/requires.txt
 src/sdap.egg-info/top_level.txt

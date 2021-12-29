@@ -69,8 +69,6 @@ class S3COG:
     def __init__(self,
                  region='us-west-2',
                  bucket='aqacf-nexus-stage',
-                 # TODO accept multiple key_pattern,
-                 # 'hls_cog/s1_output_latlon_HLS_S30_T{spatial_key}_{temporal_key}_cog.tif' should also work
                  key_pattern=[
                      'hls_cog/s1_output_latlon_HLS_L30_T{spatial_key}_{temporal_key}_cog.tif',
                      'hls_cog/s1_output_latlon_HLS_S30_T{spatial_key}_{temporal_key}_cog.tif'
@@ -98,7 +96,7 @@ class S3COG:
         s3_session = boto3.resource('s3')
         tested = 0
         found = 0
-        for key_args in itertools.product(self.key_pattern ,spatial_sub_keys, temporal_sub_keys):
+        for key_args in itertools.product(self.key_pattern, spatial_sub_keys, temporal_sub_keys):
             tested += 1
             key = Key(*key_args)
             logger.debug("Test if key %s exists", key.get_str())
@@ -123,7 +121,23 @@ class S3COG:
         for xa in self.get(lon_range, lat_range, t_range, operator):
             xas = operator.consolidate([xas, xa])
             del xa
+
+        return self.convert_coordinates(xas)
+
+    def convert_coordinates(self, xas):
+        xv, yv = np.meshgrid(xas.x, xas.y)
+
+        transformer = Transformer.from_crs(self.crs_tile,
+                                           "epsg:4326",
+                                           always_xy=True,
+                                           )
+
+        lon, lat = transformer.transform(xv, yv)
+        xas.coords['lon'] = (('y', 'x'), lon)
+        xas.coords['lat'] = (('y', 'x'), lat)
+        #xas.attrs['spatial_ref'] = '+init=epsg:4326'
         return xas
+
 
     def get(self, lon_range, lat_range, t_range, operator):
 
@@ -136,7 +150,9 @@ class S3COG:
 
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
         ray.init(include_dashboard=True,
-                 ignore_reinit_error=True)
+                 ignore_reinit_error=True,
+                 local_mode=True
+                 )
 
         futures = {}
         for key in self.get_keys(lon_range, lat_range, t_range):
@@ -164,11 +180,6 @@ class S3COG:
 
         ray.shutdown()
 
-        #results = []
-        #for s_key, t_key in self.get_keys(lon_range, lat_range, t_range):
-        #    results.append(remote_partial({'spatial_key': s_key, 'temporal_key': t_key}))
-
-        #return xarray.merge([r for r in results if not r is None])
 
 
 
