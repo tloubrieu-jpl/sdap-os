@@ -44,7 +44,6 @@ src/sdap/test/data_access/test_CollectionLoader.py
 src/sdap/test/data_access/__pycache__/__init__.cpython-39.pyc
 src/sdap/test/data_access/drivers/__init__.py
 src/sdap/test/data_access/drivers/test_S3COG.py
-src/sdap/test/data_access/drivers/S3COG/__init__.py
 src/sdap/test/data_access/index/__init__.py
 src/sdap/test/data_access/index/spatial/__init__.py
 src/sdap/test/data_access/index/spatial/test_MGRS.py

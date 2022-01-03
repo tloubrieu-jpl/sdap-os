@@ -69,7 +69,8 @@ class S3COGTestCase(unittest.TestCase):
 
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, evi)
-        print(f"performance: evi request took {time.time() - start} s")
+        n_results = len(xas.x)*len(xas.y)*len(xas.time)
+        print(f"performance: evi request took {time.time() - start} s for {n_results} points")
 
         self.plot_evi(xas)
         del xas

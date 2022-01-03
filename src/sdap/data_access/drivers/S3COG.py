@@ -37,8 +37,8 @@ def convert_coordinates(xas, target_crs="epsg:4326"):
                                        )
 
     request_x, request_y = transformer.transform(xv, yv)
-    xas.coords['request_x'] = (('y', 'x'), request_x)
-    xas.coords['request_y'] = (('y', 'x'), request_y)
+    xas.coords['request_x'] = (('x', 'y'), request_x)
+    xas.coords['request_y'] = (('x', 'y'), request_y)
     # xas.attrs['spatial_ref'] = '+init=epsg:4326'
     return xas
 
@@ -142,14 +142,12 @@ class S3COG:
 
         return xas
 
-
     def get(self, request_x_range, request_y_range, t_range, operator, request_crs="epsg:4326"):
-
 
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
         ray.init(include_dashboard=True,
                  ignore_reinit_error=True,
-                 #local_mode=True
+                 local_mode=True
                  )
 
         futures = {}
