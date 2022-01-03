@@ -1,19 +1,15 @@
 import argparse
 import os
-import sys
 import json
-import logging
-from sdap.data_access import CollectionLoader
-import numpy as np
-from sdap.operators import *
-import matplotlib.pyplot as plt
-from matplotlib.image import imread
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from datetime import datetime, date
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logger = logging.getLogger(__name__)
+from sdap.data_access import CollectionLoader
+from sdap.operators import *
+from sdap.utils import get_log
+
+logger = get_log(__name__)
 
 
 def create_parser():
@@ -22,8 +18,9 @@ def create_parser():
     conf_rel_path = './test/data_access/collection-config.yaml'
     parser.add_argument("--conf", required=False, default=os.path.join(cwd, conf_rel_path))
     parser.add_argument("--collection", required=False, default="hls")
-    parser.add_argument("--lon-range", required=False, nargs=2, type=float, default=[-71.272, -71.183])
-    parser.add_argument("--lat-range", required=False, nargs=2, type=float, default=[42.303, 43.316])
+    parser.add_argument("--x-range", required=False, nargs=2, type=float, default=[-71.272, -71.183])
+    parser.add_argument("--y-range", required=False, nargs=2, type=float, default=[42.303, 43.316])
+    parser.add_argument("--crs", required=False, type=str, default='epsg:4326')
     parser.add_argument("--time-range", required=False, nargs=2, type=str,
                         default=['2017-01-01T00:00:00.000000+00:00', '2017-04-01T00:00:00.000000+00:00'])
 
@@ -31,6 +28,7 @@ def create_parser():
     parser.add_argument("--operator-args", type=str, required=False, default=None,
                         help="arguments used to initialize the operator, "
                              "repeat option for each argument")
+    parser.add_argument("--plot", action='store_true', help='plot result (only supported for EVI operator)')
     return parser
 
 
@@ -59,6 +57,7 @@ def extend_range(range, margin):
     actual_margin = (range[1] - range[0]) * margin
     return [range[0] - actual_margin, range[1] + actual_margin]
 
+
 def plot_map(xas, lon_range, lat_range, margin):
     fig = plt.figure()
     ax = plt.axes(projection=ccrs.PlateCarree())
@@ -73,7 +72,7 @@ def plot_map(xas, lon_range, lat_range, margin):
     ax.set_extent(lon_range + lat_range, crs=ccrs.PlateCarree())
 
     # data
-    color_map = ax.pcolormesh(xas.lon, xas.lat, xas.isel(time=0), alpha=0.5, transform=ccrs.PlateCarree())
+    color_map = ax.pcolormesh(xas.request_x, xas.request_y, xas.isel(time=0), alpha=0.5, transform=ccrs.PlateCarree())
     fig.colorbar(color_map, ax=ax)
 
     # graticule
@@ -90,12 +89,11 @@ def main():
     driver = collection_loader.get_driver(args.collection)
 
     operator = get_operator(args.operator_name, args.operator_args)
-    result = driver.get_all(args.lon_range, args.lat_range, args.time_range, operator)
+    result = driver.get_all(args.x_range, args.y_range, args.time_range, operator, crs=args.crs)
     result_str = json.dumps(result.to_dict(), default=json_serial)
     print(result_str)
-    plot_map(result, args.lon_range, args.lat_range, 0.2)
-
-
+    if args.plot:
+        plot_map(result, args.x_range, args.y_range, 0.2)
 
 
 if __name__ == '__main__':

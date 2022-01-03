@@ -2,12 +2,13 @@ import sys
 import yaml
 import logging
 import re
+from sdap.utils import get_log
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
+
 
 # This loads all collections,
-# if we want a serverless application, we should do otherwise
+# TODO if we want a serverless application, we should do otherwise
 class CollectionLoader:
 
     PRIMITIVE_TYPES = (int, float, str, list)

@@ -43,10 +43,14 @@ class SpatialMean:
         output_mean = input.mean(dim=['x', 'y'])
         x_mean = input.x.data.mean()
         y_mean = input.y.data.mean()
+        request_x_mean = input.request_x.data.mean()
+        request_y_mean = input.request_y.data.mean()
         output_mean = output_mean.expand_dims(
             {
                 'x': [x_mean],
-                'y': [y_mean]
+                'y': [y_mean],
+                'request_x': [request_x_mean],
+                'request_y': [request_y_mean]
             }
         )
 

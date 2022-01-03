@@ -12,5 +12,8 @@ numpy==1.21.4
 fsspec==2021.11.1
 requests==2.26.0
 aiohttp==3.8.1
+scipy==1.7.3
+OWSLib==0.25.0
 
 [dev]
+cartopy==0.20.1

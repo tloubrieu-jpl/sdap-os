@@ -10,7 +10,7 @@ class Sentinel2GridTestCase(unittest.TestCase):
         #lon_range = [-72.572, -71.183]
 
         i = Sentinel2Grid()
-        s2_codes = i.get_codes(lon_range, lat_range)
+        s2_codes = i.get_codes(lon_range, lat_range, 'epsg:4326')
 
         assert s2_codes == ['18TYM', '18TYN', '19TBG', '19TCG', '19TCH']  # add assertion here
 

@@ -1,10 +1,9 @@
 import xarray
 import numpy as np
-import logging
-import sys
+from sdap.utils import get_log
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+
+logger = get_log(__name__)
 
 
 class OperatorProcessingException(Exception):

@@ -1,4 +1,3 @@
-import sys
 import logging
 import time
 import itertools
@@ -17,20 +16,36 @@ from pyproj import Transformer, CRS
 from sdap.data_access.index.spatial import Sentinel2Grid
 from sdap.data_access.index.temporal import Daily
 from sdap.operators import OperatorProcessingException
+from sdap.utils import get_log
 from .Key import Key
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 logging.getLogger('botocore').setLevel(logging.WARNING)
 logging.getLogger('boto3').setLevel(logging.WARNING)
 logging.getLogger('rasterio').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
-logging.getLogger('fiona').setLevel(logging.WARNING)
+
+
+
+def convert_coordinates(xas, target_crs="epsg:4326"):
+    xv, yv = np.meshgrid(xas.x, xas.y)
+
+    transformer = Transformer.from_crs(CRS(xas.spatial_ref.crs_wkt),
+                                       target_crs,
+                                       always_xy=True,
+                                       )
+
+    request_x, request_y = transformer.transform(xv, yv)
+    xas.coords['request_x'] = (('y', 'x'), request_x)
+    xas.coords['request_y'] = (('y', 'x'), request_y)
+    # xas.attrs['spatial_ref'] = '+init=epsg:4326'
+    return xas
+
 
 #TODO have abstract objects for spatial_index and temporal_index, instead of Daily used here
 @ray.remote(max_retries=0)
-def get_from_key(key: Key, x_range, y_range, operator,
+def get_from_key(key: Key, x_range, y_range, crs, operator,
                  bucket: str, session: boto3.Session, temporal_index: Daily):
     path = f's3://{bucket}/{key.get_str()}'
 
@@ -40,8 +55,9 @@ def get_from_key(key: Key, x_range, y_range, operator,
             logger.debug("fetching %s", path)
             with rio.open(path) as f:
                 rds = rioxarray.open_rasterio(f)
-                mask_x = (rds.x >= x_range[0]) & (rds.x <= x_range[1])
-                mask_y = (rds.y >= y_range[0]) & (rds.y <= y_range[1])
+                rds = convert_coordinates(rds, crs)
+                mask_x = (rds.request_x >= x_range[0]) & (rds.request_x <= x_range[1])
+                mask_y = (rds.request_y >= y_range[0]) & (rds.request_y <= y_range[1])
                 rds = rds.where(mask_x & mask_y, drop=True)
                 rds.data[rds.data == rds._FillValue] = np.nan
                 if not np.isnan(rds.data).all():
@@ -86,9 +102,11 @@ class S3COG:
         self.spatial_index = spatial_index
         self.temporal_index = temporal_index
 
-    def get_keys(self, x_range, y_range, t_range):
-        spatial_sub_keys = self.spatial_index.get_codes(x_range, y_range)
+    def get_keys(self, x_range, y_range, crs, t_range):
+
+        spatial_sub_keys = self.spatial_index.get_codes(x_range, y_range, crs)
         logger.info('spatial sub keys: %s', ', '.join(spatial_sub_keys))
+
 
         temporal_sub_keys = self.temporal_index.get_codes(t_range)
         logger.info('temporal sub keys: %s', ', '.join(temporal_sub_keys))
@@ -115,51 +133,32 @@ class S3COG:
         except botocore.exceptions.ClientError as e:
             return False
 
-    def get_all(self, lon_range, lat_range, t_range, operator):
+    def get_all(self, request_x_range, request__y_range, t_range, operator, crs="epsg:4326"):
         xas = xarray.DataArray()
         xas.name = 'var'
-        for xa in self.get(lon_range, lat_range, t_range, operator):
+        for xa in self.get(request_x_range, request__y_range, t_range, operator, request_crs="epsg:4326"):
             xas = operator.consolidate([xas, xa])
             del xa
 
-        return self.convert_coordinates(xas)
-
-    def convert_coordinates(self, xas):
-        xv, yv = np.meshgrid(xas.x, xas.y)
-
-        transformer = Transformer.from_crs(self.crs_tile,
-                                           "epsg:4326",
-                                           always_xy=True,
-                                           )
-
-        lon, lat = transformer.transform(xv, yv)
-        xas.coords['lon'] = (('y', 'x'), lon)
-        xas.coords['lat'] = (('y', 'x'), lat)
-        #xas.attrs['spatial_ref'] = '+init=epsg:4326'
         return xas
 
 
-    def get(self, lon_range, lat_range, t_range, operator):
+    def get(self, request_x_range, request_y_range, t_range, operator, request_crs="epsg:4326"):
 
-        coord_transformer = Transformer.from_crs("epsg:4326", self.crs_tile)
-        # coordinates are reversed here because x, y are in wgs84
-        coord_lower_left = coord_transformer.transform(lat_range[0], lon_range[0])
-        coord_upper_right = coord_transformer.transform(lat_range[1], lon_range[1])
-        x_range = sorted([coord_lower_left[0], coord_upper_right[0]])
-        y_range = sorted([coord_lower_left[1], coord_upper_right[1]])
 
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
         ray.init(include_dashboard=True,
                  ignore_reinit_error=True,
-                 local_mode=True
+                 #local_mode=True
                  )
 
         futures = {}
-        for key in self.get_keys(lon_range, lat_range, t_range):
+        for key in self.get_keys(request_x_range, request_y_range, request_crs, t_range):
             args = {
                 'key': key,
-                'x_range': x_range,
-                'y_range': y_range,
+                'x_range': request_x_range,
+                'y_range': request_y_range,
+                'crs': request_crs,
                 'operator': operator,
                 'bucket': self.bucket,
                 'session': self.session,

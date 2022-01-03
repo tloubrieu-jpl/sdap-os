@@ -67,14 +67,26 @@ Use command line
 
         sdap --help
 
+For example with `EVI` operator:
 
         sdap --conf ./src/sdap/test/data_access/collection-config.yaml \
              --collection hls \
-             --lon-range -71.232 -71.183 \
-             --lat-range 43.303 43.326 \
+             --x-range -71.24 -71.23 \
+             --y-range 42.40 42.42 \
              --time-range 2017-01-01T00:00:00.000000+00:00 2017-06-01T00:00:00.000000+00:00 \
              --operator-name EVI \
-             --operator-args [[0,0,-2.5,2.5,0,0,0],[0,0,2.4,1,0,0,1]]
+             --operator-args '[[0,0,-2.5,2.5,0,0,0],[0,0,2.4,1,0,0,1]]' \
+             --plot
+
+With `SpatialMean` operator:
+
+        sdap --conf ./src/sdap/test/data_access/collection-config.yaml \
+             --collection hls \
+             --x-range -71.24 -71.23 \
+             --y-range 42.40 42.42 \
+             --time-range 2017-01-01T00:00:00.000000+00:00 2017-06-01T00:00:00.000000+00:00 \
+             --operator-name SpatialMean
+             
 
 
 

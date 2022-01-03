@@ -5,6 +5,7 @@ src/__init__.py
 src/sdap/VERSION.txt
 src/sdap/__init__.py
 src/sdap/main.py
+src/sdap/utils.py
 src/sdap.egg-info/PKG-INFO
 src/sdap.egg-info/SOURCES.txt
 src/sdap.egg-info/dependency_links.txt
