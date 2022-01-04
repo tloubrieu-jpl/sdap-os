@@ -147,7 +147,7 @@ class S3COG:
         # ray.init(_node_ip_address='128.149.255.29', ignore_reinit_error=True)
         ray.init(include_dashboard=True,
                  ignore_reinit_error=True,
-                 local_mode=True
+                 #local_mode=True
                  )
 
         futures = {}

@@ -21,7 +21,7 @@ class S3COGTestCase(unittest.TestCase):
         time_range = ['2017-05-20T00:00:00.000000+00:00', '2017-06-20T00:00:00.000000+00:00']
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, SpatialMean())
-        print(f"performance: small mean request took {time.time() - start} s")
+        print(f"performance: small mean request took {time.time() - start} s to average {xas.weight.sum()} observations")
         plt.figure()
         plt.plot(xas.time, xas['var'].data[0, 0, :, :])
         del xas
@@ -48,7 +48,7 @@ class S3COGTestCase(unittest.TestCase):
 
         start = time.time()
         xas = s3_cog_driver.get_all(lon_range, lat_range, time_range, SpatialMean())
-        print(f"performance: bigger mean request took {time.time() - start} s")
+        print(f"performance: bigger mean request took {time.time() - start} s to average {xas.weight.sum()} observations")
 
         plt.figure()
         plt.plot(xas.time, xas['var'].data[0,0,:,:])
