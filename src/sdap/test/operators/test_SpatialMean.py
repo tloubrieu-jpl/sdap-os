@@ -17,8 +17,8 @@ class SpatialMeanTestCase(unittest.TestCase):
         coords={
             "x": [10, 20],
             "y": [150, 160],
-            "request_x": [30, 40],
-            "request_y": [150, 160],
+            "request_x": (('x'), [30, 40]),
+            "request_y": (('y'), [150, 160]),
             "time": [
                 datetime.fromisoformat('2021-12-16'),
                 datetime.fromisoformat('2021-12-17')
@@ -36,8 +36,8 @@ class SpatialMeanTestCase(unittest.TestCase):
         coords={
             "x": [30, 40],
             "y": [150, 160],
-            "request_x": [30, 40],
-            "request_y": [150, 160],
+            "request_x": (('x'), [30, 40]),
+            "request_y": (('y'), [150, 160]),
             "time": [
                 datetime.fromisoformat('2021-12-18'),
                 datetime.fromisoformat('2021-12-19')
