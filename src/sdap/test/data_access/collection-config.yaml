@@ -1,6 +1,6 @@
 collections:
   hls:
-    class: sdap.data_access.drivers.S3COG
+    class: sdap.data_access.drivers.S3COG.S3COG
     args:
       bucket: aqacf-nexus-stage
       keyPattern:
@@ -12,4 +12,13 @@ collections:
         class: sdap.data_access.index.temporal.Daily
         args:
           format: '%Y%j'
-
+  maiac:
+    class: sdap.data_access.drivers.S3COG.S3COG
+    args:
+      bucket: modis-aod-nasa
+      keyPattern:
+        - '{temporal_key}.tif'
+      temporalIndex:
+        class: sdap.data_access.index.temporal.Daily
+        args:
+          format: '%Y.%m.%d'

@@ -1,4 +1,18 @@
-SDAP experiment with object storage
+SDAP experiment with object storage and other technologies (ray.io, xarray...)
+
+# Features
+
+- Applies simple algorithms on earth observation datasets
+
+- Read Cloud Optimized GeoTiff on S3 bucket
+- Manage S3 bucket with public access or with access keys
+- Manage datasets in any CRS (WGS84, UTM, ...)
+- Manage multi-band datasets
+
+- Algorithms managed:
+    - Spatial Mean: on a x,y,t range averages on x,y dimensions
+    - EVI: linear combinations of multi-band spectra
+    
 
 # Prerequisites
 
@@ -45,11 +59,19 @@ For example with `EVI` operator:
 With `SpatialMean` operator:
 
         sdap --conf ./src/sdap/test/data_access/collection-config.yaml \
+             --secrets my_secrets.yaml \
              --collection hls \
-             --x-range -71.24 -71.23 \
-             --y-range 42.40 42.42 \
+             --bbox -71.24 42.40 -71.23 42.42 \
              --time-range 2017-01-01T00:00:00.000000+00:00 2017-06-01T00:00:00.000000+00:00 \
              --operator-name SpatialMean
+
+        sdap --conf ./src/sdap/test/data_access/collection-config.yaml \
+             --collection maiac \
+             --bbox -71.25 42.39 -71.23 42.42 \
+             --time-range 2019-01-01T00:00:00.000000+00:00 2019-02-01T00:00:00.000000+00:00 \
+             --operator-name SpatialMean
+
+
              
 
 

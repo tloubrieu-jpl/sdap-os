@@ -17,10 +17,10 @@ def create_parser():
     cwd = os.path.dirname(__file__)
     conf_rel_path = './test/data_access/collection-config.yaml'
     parser.add_argument("--conf", required=False, default=os.path.join(cwd, conf_rel_path))
+    parser.add_argument("--secrets", required=False, default=None)
     parser.add_argument("--collection", required=False, default="hls")
-    parser.add_argument("--x-range", required=False, nargs=2, type=float, default=[-71.272, -71.183])
-    parser.add_argument("--y-range", required=False, nargs=2, type=float, default=[42.303, 43.316])
-    parser.add_argument("--crs", required=False, type=str, default='epsg:4326')
+    parser.add_argument("--bbox", required=False, nargs=4, type=float, default=[42.303, -71.272, 43.316, -71.183])
+    parser.add_argument("--crs", required=False, type=str, default='EPSG:4326')
     parser.add_argument("--time-range", required=False, nargs=2, type=str,
                         default=['2017-01-01T00:00:00.000000+00:00', '2017-04-01T00:00:00.000000+00:00'])
 
@@ -85,11 +85,16 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    collection_loader = CollectionLoader(args.conf)
+    collection_loader = CollectionLoader(args.conf, secret_file=args.secrets)
     driver = collection_loader.get_driver(args.collection)
 
+    time_range = [datetime.fromisoformat(t) for t in args.time_range]
+
     operator = get_operator(args.operator_name, args.operator_args)
-    result = driver.get_all(args.x_range, args.y_range, args.time_range, operator, crs=args.crs)
+    result = driver.get_all(args.bbox,
+                            time_range,
+                            operator,
+                            crs=args.crs)
     result_str = json.dumps(result.to_dict(), default=json_serial)
     print(result_str)
     if args.plot:

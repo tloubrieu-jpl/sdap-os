@@ -13,16 +13,30 @@ class CollectionLoader:
 
     PRIMITIVE_TYPES = (int, float, str, list)
 
-    def __init__(self, conf_file):
-        self.conf_file = conf_file
+    def __init__(self, conf_file, secret_file=None):
+        self._conf_file = conf_file
+        self._secret_file = secret_file
         self.camel_2_snake_pattern = re.compile(r'(?<!^)(?=[A-Z])')
 
         with open(conf_file, 'r') as stream:
             self.conf = yaml.load(stream, yaml.Loader)
 
+            if secret_file:
+                self._add_secrets(self.conf, secret_file)
+
             self.collections = {}
             for key, desc in self.conf['collections'].items():
                 self.collections[key] = self.desc_to_instances(desc)
+
+    @staticmethod
+    def _add_secrets(conf, secret_file):
+        with open(secret_file, 'r') as secret_stream:
+            secrets = yaml.load(secret_stream, yaml.Loader)
+            for c_name, c_desc in conf['collections'].items():
+                if c_name in secrets:
+                    c_desc['args'].update(secrets[c_name])
+
+        return conf
 
     def get_driver(self, collection):
         return self.collections[collection]
@@ -50,7 +64,7 @@ class CollectionLoader:
                     args[k_snake] = self.desc_to_instances(v)
             return kls(**args)
         else:
-            logger.warning('value %s in %s configuration is not supported', desc, self.conf_file)
+            logger.warning('value %s in %s configuration is not supported', desc, self._conf_file)
             return None
 
 

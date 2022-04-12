@@ -16,6 +16,7 @@ Classifier: Topic :: Scientific/Engineering
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 Provides-Extra: dev
+Provides-Extra: ingestion
 
 SDAP experiment with object storage
 
