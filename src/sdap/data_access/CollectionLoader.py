@@ -28,6 +28,9 @@ class CollectionLoader:
             for key, desc in self.conf['collections'].items():
                 self.collections[key] = self.desc_to_instances(desc)
 
+    def get_collections(self):
+        return [c for c in self.conf['collections']]
+
     @staticmethod
     def _add_secrets(conf, secret_file):
         with open(secret_file, 'r') as secret_stream:
@@ -40,6 +43,9 @@ class CollectionLoader:
 
     def get_driver(self, collection):
         return self.collections[collection]
+
+    def get_collection_list(self):
+        return list(self.conf.keys())
 
     @staticmethod
     def get_class(kls):

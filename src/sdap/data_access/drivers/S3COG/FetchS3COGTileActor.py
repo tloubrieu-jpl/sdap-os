@@ -69,29 +69,28 @@ class FetchS3COGTileActor:
                                                        )
             return list(target_bbox)
 
-    @staticmethod
-    def add_coordinates(xas, target_crs=CRS.from_string("epsg:4326")):
-        # we want the lines to the x coordinates and the columns the y ?
-        # TODO need to confirm that still works for dataset in UTM coordinates (hls), I don't believe that will.
-        # otherwise option is to force a different CRS...
-        # or understand if always_xy has an impact (I was not able to make that work playing with this argument...)
-        # skip equivalent does not workl either. Would need something else because we really don't need the coordinate transformation here.
+    def add_request_coordinates(self, xas):
+
+        #if not self.cache_ds_coordinates or self.request_y is None:
         xv, yv = np.meshgrid(xas.x, xas.y, indexing='ij')
 
         source_crs = CRS(xas.spatial_ref.crs_wkt)
-        if source_crs.equals(target_crs):
-            request_x, request_y = xv, yv
+        if source_crs.equals(self.crs):
+            self.request_x, self.request_y = xv, yv
         else:
             transformer = Transformer.from_crs(source_crs,
-                                               target_crs,
+                                               self.crs,
                                                skip_equivalent=True,
                                                always_xy=True
                                                )
 
-            request_x, request_y = transformer.transform(xv, yv)
+            self.request_x, self.request_y = transformer.transform(xv, yv)
+        logger.debug("cached x,y dimensions are x %i, y %i", len(self.request_x), len(self.request_x[0]))
 
-        xas.coords['request_x'] = (('x', 'y'), request_x)
-        xas.coords['request_y'] = (('x', 'y'), request_y)
+        logger.debug("add request coordinates to grid with dimension x %i, y %i", len(xas.x), len(xas.y))
+
+        xas.coords['request_x'] = (('x', 'y'), self.request_x)
+        xas.coords['request_y'] = (('x', 'y'), self.request_y)
 
         return xas
 
@@ -106,14 +105,19 @@ class FetchS3COGTileActor:
                 logger.debug("fetching %s", path)
                 with rio.open(path) as f:
                     rds = rioxarray.open_rasterio(f)
+                    #if not self.cache_ds_coordinates or self.ds_bbox is None:
                     ds_crs = CRS(rds.spatial_ref.crs_wkt)
                     self.ds_bbox = FetchS3COGTileActor.convert_bbox(self.bbox, CRS.from_string(self.crs), ds_crs)
-                    rds = rds.rio.clip_box(minx=self.ds_bbox[0],
-                                     maxx=self.ds_bbox[2],
-                                     miny=self.ds_bbox[1],
-                                     maxy=self.ds_bbox[3])
 
-                    rds = FetchS3COGTileActor.add_coordinates(rds, self.crs)
+                    rds = rds.rio.clip_box(
+                                    minx=self.ds_bbox[0],
+                                    maxx=self.ds_bbox[2],
+                                    miny=self.ds_bbox[1],
+                                    maxy=self.ds_bbox[3]
+                    )
+                    rds = self.add_request_coordinates(rds)
+
+                    #if not self.cache_ds_coordinates or self.mask is None:
                     mask_x = (rds.request_x >= self.bbox[0]) & (rds.request_x <= self.bbox[2])
                     mask_y = (rds.request_y >= self.bbox[1]) & (rds.request_y <= self.bbox[3])
                     self.mask = mask_x & mask_y

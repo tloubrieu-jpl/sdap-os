@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from datetime import datetime, date
 
 from sdap.data_access import CollectionLoader
-from sdap.operators import *
+from sdap.operators import get_operator
+from sdap.utils import json_serial
 from sdap.utils import get_log
 
 logger = get_log(__name__)
@@ -30,22 +31,6 @@ def create_parser():
                              "repeat option for each argument")
     parser.add_argument("--plot", action='store_true', help='plot result (only supported for EVI operator)')
     return parser
-
-
-def get_operator(operator_name, operator_args):
-    operator_class = globals()[operator_name]
-    if operator_args:
-        return operator_class(*eval(operator_args))
-    else:
-        return operator_class()
-
-
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
 
 
 def extend_range(range, margin):

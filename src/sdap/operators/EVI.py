@@ -1,9 +1,9 @@
 import xarray
 import numpy as np
-from sdap.utils import get_log
+from sdap import utils
 
 
-logger = get_log(__name__)
+logger = utils.get_log(__name__)
 
 
 class OperatorProcessingException(Exception):

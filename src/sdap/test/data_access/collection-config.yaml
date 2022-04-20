@@ -1,17 +1,17 @@
 collections:
-  hls:
-    class: sdap.data_access.drivers.S3COG.S3COG
-    args:
-      bucket: aqacf-nexus-stage
-      keyPattern:
-        - hls_cog/s1_output_latlon_HLS_S30_T{spatial_key}_{temporal_key}_cog.tif
-        - hls_cog/s1_output_latlon_HLS_L30_T{spatial_key}_{temporal_key}_cog.tif
-      spatialIndex:
-        class: sdap.data_access.index.spatial.Sentinel2Grid
-      temporalIndex:
-        class: sdap.data_access.index.temporal.Daily
-        args:
-          format: '%Y%j'
+#  hls:
+#    class: sdap.data_access.drivers.S3COG.S3COG
+#    args:
+#      bucket: aqacf-nexus-stage
+#      keyPattern:
+#        - hls_cog/s1_output_latlon_HLS_S30_T{spatial_key}_{temporal_key}_cog.tif
+#        - hls_cog/s1_output_latlon_HLS_L30_T{spatial_key}_{temporal_key}_cog.tif
+#      spatialIndex:
+#        class: sdap.data_access.index.spatial.Sentinel2Grid
+#      temporalIndex:
+#        class: sdap.data_access.index.temporal.Daily
+#        args:
+#          format: '%Y%j'
   maiac:
     class: sdap.data_access.drivers.S3COG.S3COG
     args:

@@ -8,6 +8,7 @@ SDAP experiment with object storage and other technologies (ray.io, xarray...)
 - Manage S3 bucket with public access or with access keys
 - Manage datasets in any CRS (WGS84, UTM, ...)
 - Manage multi-band datasets
+- 
 
 - Algorithms managed:
     - Spatial Mean: on a x,y,t range averages on x,y dimensions
